@@ -1,28 +1,26 @@
 # syamcode
 
-CLI untuk **minify + reversible identifier obfuscation** (tanpa dependency eksternal).
+CLI for **minify + reversible identifier obfuscation** that can be restored using a key file named `.syamkey`.
 
-Untuk ekstensi kode tertentu (terutama JS/TS), syamcode:
+For selected code extensions (especially JS/TS), `syamcode`:
 
-1. membuat versi minified
-2. mengganti nama identifier dengan token generik (`id1`, `id2`, dst)
-3. menulis file kunci: `<outputPath>.syamkey` (JSON mapping)
-4. bisa di-restore: `syamcode restore` untuk mengembalikan identifier ke nama asli
+1. produces a minified version
+2. replaces identifier names with generic tokens (`id1`, `id2`, ...)
+3. writes a key file: `<outputPath>.syamkey` (JSON mapping)
+4. can restore identifiers back to the original names using `syamcode restore`
 
-> Catatan: Karena **tanpa AST/dependency**, obfuscation/restoration untuk identifier bersifat _best-effort_.
+## Usage
 
-## Cara pakai
-
-### Minify (menghasilkan `.syamkey`)
+### Minify (generates `.syamkey`)
 
 ```bash
 npx syamcode <inputPath> <outputPath>
 ```
 
-Hasil:
+Outputs:
 
-- `<outputPath>` (minified)
-- `<outputPath>.syamkey` (kunci mapping) untuk file JS/TS/JSX/TSX
+- `<outputPath>`: minified code
+- `<outputPath>.syamkey`: mapping for JS/TS/JSX/TSX
 
 ### Restore
 
@@ -30,7 +28,7 @@ Hasil:
 npx syamcode restore <minifiedPath> <syamkeyPath> <outputPath>
 ```
 
-## Contoh
+## Examples
 
 ```bash
 npx syamcode src/app.js dist/app.min.js
@@ -41,17 +39,18 @@ npx syamcode index.html dist/index.min.html
 npx syamcode data/config.json dist/config.min.json
 ```
 
-## Dukungan ekstensi (best-effort)
+## Extension support (best-effort)
 
 - `.js/.ts/.jsx/.tsx`:
-  - remove komentar + kompres whitespace (konservatif)
-  - obfuscate identifier dengan token generik (`id1`, `id2`, dst)
-- `.css`: remove `/* ... */` + kompres whitespace
-- `.html/.htm`: remove `<!-- ... -->` + kompres whitespace antar tag
-- `.json`: `JSON.parse` lalu `JSON.stringify`
-- `.svg`: remove komentar `<!-- ... -->` + kompres whitespace
+  - parse using **Babel AST**
+  - remove comments + compress whitespace + rename bindings in a **scope-aware** manner
+  - generate `.syamkey` mapping: `originalIdentifier -> idN`
+- `.css`: remove `/* ... */` + compress whitespace
+- `.html/.htm`: remove `<!-- ... -->` + compress whitespace between tags
+- `.json`: `JSON.parse` then `JSON.stringify`
+- `.svg`: remove `<!-- ... -->` + compress whitespace
 
-## Catatan penting
+## Important notes
 
-- Restore hanya mengembalikan **nama identifier**, bukan mengembalikan whitespace dan komentar original (karena itu sudah di-minify).
-- Tanpa AST, pemetaan variabel/fungsi/struct tidak dibedakan; mapping bersifat generik: `identifier asli -> idN`.
+- Restore returns the **identifier names** (after reversing the rename), not the original whitespace/comments.
+- For JS/TS/JSX/TSX, restoration correctness is improved by using **scope-aware** Babel AST transformations.

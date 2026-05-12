@@ -117,13 +117,25 @@ function minifyByExtNonAst(inputPath, content) {
 function obfuscateIdentifiersWithKeyAst(code, ext) {
   const ast = parseCode(code, ext);
 
-  const mapping = {}; // original -> idN
-  let idCounter = 0;
+  const crypto = require("crypto");
+  const mapping = {}; // original -> hashToken
+
+  function hashToken(name) {
+    // Biar aman untuk identifier JS (tanpa simbol), pakai base64url dan ambil prefix.
+    // Contoh hasil: h_a9f3c2e1f4c0
+    const digest = crypto
+      .createHash("sha256")
+      .update(name, "utf8")
+      .digest("base64url");
+    // Hindari karakter yang tidak aman untuk identifier.
+    // Kita tetap pakai awalan 'h' dan ambil hanya hex alfanumerik (tanpa '-').
+    const hex = Buffer.from(digest, "base64url").toString("hex");
+    return `h${hex.slice(0, 12)}`;
+  }
 
   function getToken(name) {
     if (mapping[name]) return mapping[name];
-    idCounter += 1;
-    const token = `id${idCounter}`;
+    const token = hashToken(name);
     mapping[name] = token;
     return token;
   }

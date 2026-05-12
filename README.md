@@ -5,7 +5,7 @@ CLI for **minify + reversible identifier obfuscation** that can be restored usin
 For selected code extensions (especially JS/TS), `syamcode`:
 
 1. produces a minified version
-2. replaces identifier names with generic tokens (`id1`, `id2`, ...)
+2. replaces identifier names with hash SHA-256
 3. writes a key file: `<outputPath>.syamkey` (JSON mapping)
 4. can restore identifiers back to the original names using `syamcode restore`
 

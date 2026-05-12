@@ -1,8 +1,16 @@
 # Changelog
 
-## 0.1.0 (Initial)
+## v1.0.0 🎉
+Initial release of `syamcode`
 
-- Initial release of **syamcode** CLI for _minify + reversible identifier obfuscation_.
-- Supports:
-  - `npx syamcode <inputPath> <outputPath>` to generate `<outputPath>` and `<outputPath>.syamkey`
-  - `npx syamcode restore <minifiedPath> <syamkeyPath> <outputPath>` to restore identifiers
+### Added
+- CLI minifier for JS, TS, JSX, TSX, CSS, HTML, JSON, and SVG
+- Reversible identifier obfuscation using SHA-256
+- `.syamkey` mapping file generation
+- `restore` command to recover original identifiers
+- Scope-aware Babel AST transformations for safer renaming
+
+### Features
+- Remove comments and unnecessary whitespace
+- Minify multiple file formats
+- Restore original identifier names from minified code

@@ -34,21 +34,17 @@ npx syamcode restore <minifiedPath> <syamkeyPath> <outputPath>
 npx syamcode src/app.js dist/app.min.js
 npx syamcode dist/app.min.js dist/app.min.js.syamkey dist/app.restored.js
 
-npx syamcode styles/main.css dist/main.min.css
-npx syamcode index.html dist/index.min.html
-npx syamcode data/config.json dist/config.min.json
+npx syamcode src/app.mjs dist/app.min.mjs
+npx syamcode dist/app.min.mjs dist/app.min.mjs.syamkey dist/app.restored.mjs
 ```
 
-## Extension support (best-effort)
+## Supported extensions
 
-- `.js/.ts/.jsx/.tsx`:
+- `.js` and `.mjs`:
   - parse using **Babel AST**
-  - remove comments + compress whitespace + rename bindings in a **scope-aware** manner
+  - remove comments + compress whitespace
+  - rename bindings in a **scope-aware** manner (reversible via `.syamkey`)
   - generate `.syamkey` mapping: `originalIdentifier -> idN`
-- `.css`: remove `/* ... */` + compress whitespace
-- `.html/.htm`: remove `<!-- ... -->` + compress whitespace between tags
-- `.json`: `JSON.parse` then `JSON.stringify`
-- `.svg`: remove `<!-- ... -->` + compress whitespace
 
 ## Important notes
 

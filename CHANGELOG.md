@@ -1,10 +1,10 @@
 # Changelog
 
-## v1.0.0 🎉
+## v0.1.0 🎉
 Initial release of `syamcode`
 
 ### Added
-- CLI minifier for JS, TS, JSX, TSX, CSS, HTML, JSON, and SVG
+- CLI minifier for JS and MJS
 - Reversible identifier obfuscation using SHA-256
 - `.syamkey` mapping file generation
 - `restore` command to recover original identifiers

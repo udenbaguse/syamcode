@@ -29,7 +29,10 @@ function detectExt(p) {
 }
 
 function isCodeExt(ext) {
-  return [".js", ".ts", ".jsx", ".tsx"].includes(ext);
+  // Only support reversible identifier obfuscation for:
+  // - .js (including .mjs modules)
+  // - .mjs
+  return [".js", ".mjs"].includes(ext);
 }
 
 function parseCode(code, ext) {
@@ -238,27 +241,26 @@ function handleMinify(inputPath, outputPath) {
   const input = fs.readFileSync(inputPath, "utf8");
   const ext = detectExt(inputPath);
 
+  if (!isCodeExt(ext)) {
+    fail(
+      `Unsupported file extension: "${ext}". syamcode only supports ".js" and ".mjs".`,
+    );
+  }
+
   const syamkeyPath = `${outputPath}.syamkey`;
 
-  let minified = "";
+  const { obfuscated, mapping } = obfuscateIdentifiersWithKeyAst(input, ext);
+
   let keyObj = {
     format: "syamcode-key-v2",
     version: 2,
     sourceExt: ext,
-    mapping: {},
+    mapping,
     createdAt: new Date().toISOString(),
   };
 
-  if (isCodeExt(ext)) {
-    const { obfuscated, mapping } = obfuscateIdentifiersWithKeyAst(input, ext);
-    minified = obfuscated;
-    keyObj.mapping = mapping;
-  } else {
-    minified = minifyByExtNonAst(inputPath, input);
-  }
-
   fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, minified, "utf8");
+  fs.writeFileSync(outputPath, obfuscated, "utf8");
   fs.writeFileSync(syamkeyPath, JSON.stringify(keyObj, null, 0), "utf8");
 
   console.log(`[syamcode] Minified: ${inputPath} -> ${outputPath}`);

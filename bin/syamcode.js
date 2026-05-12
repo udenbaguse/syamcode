@@ -117,33 +117,6 @@ function minifyByExtNonAst(inputPath, content) {
 //   sourceExt: ".js",
 //   mapping: { "originalName": "id1", ... }
 // }
-function escapeRegExp(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function renameIdentifiersInText(text, renameMap) {
-  // best-effort: replace identifier-like words only
-  // e.g. original: foo -> id1, keep other text intact
-  for (const [from, to] of Object.entries(renameMap)) {
-    // \b works for identifier boundaries in ASCII-ish text; acceptable for comments.
-    const re = new RegExp(`\\b${escapeRegExp(from)}\\b`, "g");
-    text = text.replace(re, to);
-  }
-  return text;
-}
-
-function convertLineCommentsToBlock(ast) {
-  if (!ast || !Array.isArray(ast.comments)) return;
-  for (const c of ast.comments) {
-    if (c && c.type === "CommentLine") {
-      c.type = "CommentBlock";
-      // Babel expects no leading // in value for CommentBlock; it will add /* */
-      // Keep original content:
-      c.value = c.value.trim();
-    }
-  }
-}
-
 function obfuscateIdentifiersWithKeyAst(code, ext) {
   const ast = parseCode(code, ext);
 
@@ -151,10 +124,14 @@ function obfuscateIdentifiersWithKeyAst(code, ext) {
   const mapping = {}; // original -> hashToken
 
   function hashToken(name) {
+    // Biar aman untuk identifier JS (tanpa simbol), pakai base64url dan ambil prefix.
+    // Contoh hasil: h_a9f3c2e1f4c0
     const digest = crypto
       .createHash("sha256")
       .update(name, "utf8")
       .digest("base64url");
+    // Hindari karakter yang tidak aman untuk identifier.
+    // Kita tetap pakai awalan 'h' dan ambil hanya hex alfanumerik (tanpa '-').
     const hex = Buffer.from(digest, "base64url").toString("hex");
     return `h${hex.slice(0, 12)}`;
   }
@@ -166,18 +143,32 @@ function obfuscateIdentifiersWithKeyAst(code, ext) {
     return token;
   }
 
+  // Rename bindings using scope.rename so references are updated.
+  // Also: skip renaming globals/builtins by checking binding existence;
+  // scope.rename only works for bindings within scopes.
   traverse(ast, {
+    Program(programPath) {
+      // Walk all bindings in the whole program by visiting scopes.
+      // traverse will also visit nested scopes.
+      // We'll collect bindings from every scope.
+    },
     enter(p) {
       const scope = p.scope;
       if (!scope) return;
 
+      // For each scope, rename its own bindings.
+      // bindings is a Map-like object: scope.bindings[name]
       const bindings = scope.bindings || {};
       for (const [name, binding] of Object.entries(bindings)) {
         if (!binding) continue;
-
+        // binding.kind could be "var", "let", "const", "param", "hoisted" etc. We'll rename all.
         const newName = getToken(name);
+
+        // Prevent trying to rename to same name
         if (newName === name) continue;
 
+        // Babel's scope.rename(oldName, newName) renames binding + references in that scope.
+        // But calling multiple times across nested scopes can conflict; still best-effort.
         try {
           scope.rename(name, newName);
         } catch {
@@ -187,38 +178,10 @@ function obfuscateIdentifiersWithKeyAst(code, ext) {
     },
   });
 
-  // 1) convert //comment into /* ... */ so it "survives" minify style consistently
-  // 2) ensure identifiers mentioned in comments also get mapped
-  // 3) apply the same identifier rename mapping to comment text
-  convertLineCommentsToBlock(ast);
-
-  function collectIdentifierWords(text) {
-    // JS identifier-ish words (best-effort) for comments
-    // - allows $, _, letters; includes digits after first char
-    const re = /[$A-Z_][0-9A-Z_$]*/gi;
-    const out = new Set();
-    let m;
-    while ((m = re.exec(text))) out.add(m[0]);
-    return out;
-  }
-
-  if (Array.isArray(ast.comments)) {
-    for (const c of ast.comments) {
-      if (!c || typeof c.value !== "string") continue;
-
-      // populate mapping so comment identifiers appear in .syamkey
-      for (const name of collectIdentifierWords(c.value)) {
-        getToken(name);
-      }
-
-      c.value = renameIdentifiersInText(c.value, mapping);
-    }
-  }
-
   const out = generate(ast, {
     jsescOption: { minimal: true },
     compact: true,
-    comments: true,
+    comments: false,
   }).code;
 
   return { obfuscated: out, mapping };
@@ -259,18 +222,10 @@ function restoreIdentifiersFromKeyAst(minifiedCode, keyObj, extHint) {
     },
   });
 
-  // Restore identifiers inside comment text too (comments are preserved in output)
-  if (Array.isArray(ast.comments)) {
-    for (const c of ast.comments) {
-      if (!c || typeof c.value !== "string") continue;
-      c.value = renameIdentifiersInText(c.value, reverse);
-    }
-  }
-
   const out = generate(ast, {
     jsescOption: { minimal: true },
     compact: true,
-    comments: true,
+    comments: false,
   }).code;
 
   return out;

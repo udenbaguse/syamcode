@@ -43,7 +43,6 @@ npx syamcode dist/app.min.mjs dist/app.min.mjs.syamkey dist/app.restored.mjs
 - `.js` and `.mjs`:
   - parse using **Babel AST**
   - remove comments + compress whitespace
-  - rename bindings in a **scope-aware** manner (reversible via `.syamkey`)
   - generate `.syamkey` mapping: `originalIdentifier -> idN`
 
 ## Important notes

@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.1.0 🎉
+## v1.0.0 (2026-05-13)
 Initial release of `syamcode`
 
 ### Features

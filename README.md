@@ -2,6 +2,12 @@
 
 CLI for **minify + reversible identifier obfuscation** that can be restored using a key file named `.syamkey`.
 
+[![License](https://img.shields.io/badge/license-proprietary-blue.svg)](LICENSE)
+
+## License
+
+This software is proprietary. By using SyamCode, you agree to the [End-User License Agreement (EULA)](LICENSE).
+
 For selected code extensions (especially JS/TS), `syamcode`:
 
 1. produces a minified version

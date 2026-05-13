@@ -1,12 +1,15 @@
 {
-  "name": "syamcode",
+  "name": "@udenbaguse/syamcode",
+   "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "version": "0.1.0",
   "description": "CLI to minify code and perform reversible identifier obfuscation + restore (Babel AST).",
   "bin": {
     "syamcode": "bin/syamcode-syamkey-v2.js"
   },
   "type": "commonjs",
-  "license": "PROPRIETARY",
+  "license": "EULA",
   "author": "Muhamad Syamsudin (@udenbaguse",
   "dependencies": {
     "@babel/generator": "^7.26.0",

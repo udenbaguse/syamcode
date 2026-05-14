@@ -1,6 +1,10 @@
 # Changelog
 
-## Version 2.0.1 (2026-05-14)
+## Version 2.0. (2026-05-14)
+### Fixed
+- Remove TS for fix bug
+
+## Version 2.0.2 (2026-05-14)
 ### Updated
 - Updated README and LICENSE with correct package name and site URL.
 - Updated EULA with new attribution requirements and usage terms.

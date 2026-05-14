@@ -15,5 +15,19 @@
     "@babel/generator": "^7.26.0",
     "@babel/parser": "^7.26.0",
     "@babel/traverse": "^7.26.0"
-  }
+  },
+  "keywords": [
+    "syamcode",
+    "minify",
+    "unminify",
+    "encrypt",
+    "decrypt",
+    "code-minify",
+    "code-restore",
+    "javascript",
+    "babel",
+    "code-tool",
+    "developer-tools",
+    "udenbaguse"
+  ]
 }

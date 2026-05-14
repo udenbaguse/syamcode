@@ -133,11 +133,12 @@ function obfuscateIdentifiersWithKeyAst(code, ext) {
     // Hindari karakter yang tidak aman untuk identifier.
     // Kita tetap pakai awalan 'h' dan ambil hanya hex alfanumerik (tanpa '-').
     const hex = Buffer.from(digest, "base64url").toString("hex");
-    return `h${hex.slice(0, 12)}`;
+    return `h${hex}`;
   }
 
   function getToken(name) {
     if (mapping[name]) return mapping[name];
+    if (/^h[a-f0-9]{64}$/.test(name)) return name;
     const token = hashToken(name);
     mapping[name] = token;
     return token;
@@ -161,7 +162,8 @@ function obfuscateIdentifiersWithKeyAst(code, ext) {
       const bindings = scope.bindings || {};
       for (const [name, binding] of Object.entries(bindings)) {
         if (!binding) continue;
-        // binding.kind could be "var", "let", "const", "param", "hoisted" etc. We'll rename all.
+        if (binding.path.parent.type.startsWith("Import")) continue;
+        if (/^h[a-f0-9]{64}$/.test(name)) continue;
         const newName = getToken(name);
 
         // Prevent trying to rename to same name
@@ -208,6 +210,7 @@ function restoreIdentifiersFromKeyAst(minifiedCode, keyObj, extHint) {
       const bindings = scope.bindings || {};
       for (const [name, binding] of Object.entries(bindings)) {
         if (!binding) continue;
+        if (binding.path.parent.type.startsWith("Import")) continue;
         if (!reverse[name]) continue;
 
         const newName = reverse[name];

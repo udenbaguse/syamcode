@@ -1,5 +1,15 @@
 # Changelog
 
+## Version 2.0.4 (2026-05-14)
+### Added
+- .syamkey version 3, hash now uses full 64-digit (SHA-256) hex for stronger obfuscation
+
+### Changed
+- Rewrite CommondJS to use ES modules for better compatibility and tree-shaking
+
+### Fixed
+- Import identifiers are preserved during minification (not hashed)
+
 ## Version 2.0.3 (2026-05-14)
 ### Fixed
 - Remove TS for fix bug

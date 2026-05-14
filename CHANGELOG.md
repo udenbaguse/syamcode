@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 2.0.1 (2026-05-14)
+### Fixed
+- fixed restore command to correctly handle
+
 ## Version 2.0.0 (2026-05-14)
 
 ### Added

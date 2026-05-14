@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 2.0. (2026-05-14)
+## Version 2.0.3 (2026-05-14)
 ### Fixed
 - Remove TS for fix bug
 

@@ -1,15 +1,29 @@
 # Changelog
 
-## v1.0.0 (2026-05-13)
-Initial release of `syamcode`
+## Version 2.0.0 (2026-05-14)
+
+### Added
+- Remove comments and unnecessary whitespace
+
+### Fixed
+- Restore original identifier names from minified code using the .syamkey version 2.
+- Scope-aware Babel AST transformations for safer renaming
+
+## Version 1.0.0 (2026-05-13)
+
+### Added
+- `.syamkey` mapping file generation
+
+### Changed
+- Reversible identifier obfuscation using SHA-256 (Syamkey version 2).
+
+### Fixed
+- `restore` command to recover original identifiers
+
+## Version 0.1.0 (2026-05-12)
+Initial release with basic minification and obfuscation features
 
 ### Features
-
-- CLI minifier for JS and MJS
-- Reversible identifier obfuscation using SHA-256
-- `.syamkey` mapping file generation
-- `restore` command to recover original identifiers
-- Scope-aware Babel AST transformations for safer renaming
-- Remove comments and unnecessary whitespace
-- Minify multiple file formats
+- CLI minifier for JS
+- replace identifier names with Syamkey version 1 (generic id1, id2, etc).
 - Restore original identifier names from minified code

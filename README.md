@@ -20,7 +20,7 @@ For selected code extensions (especially JS/TS), `syamcode`:
 ### Minify (generates `.syamkey`)
 
 ```bash
-npx syamcode <inputPath> <outputPath>
+npx @udenbaguse/syamcode <inputPath> <outputPath>
 ```
 
 Outputs:
@@ -31,17 +31,17 @@ Outputs:
 ### Restore
 
 ```bash
-npx syamcode restore <minifiedPath> <syamkeyPath> <outputPath>
+npx @udenbaguse/syamcode restore <minifiedPath> <syamkeyPath> <outputPath>
 ```
 
 ## Examples
 
 ```bash
-npx syamcode src/app.js dist/app.min.js
-npx syamcode dist/app.min.js dist/app.min.js.syamkey dist/app.restored.js
+npx @udenbaguse/syamcode src/app.js dist/app.min.js
+npx @udenbaguse/syamcode dist/app.min.js dist/app.min.js.syamkey dist/app.restored.js
 
-npx syamcode src/app.mjs dist/app.min.mjs
-npx syamcode dist/app.min.mjs dist/app.min.mjs.syamkey dist/app.restored.mjs
+npx @udenbaguse/syamcode src/app.mjs dist/app.min.mjs
+npx @udenbaguse/syamcode dist/app.min.mjs dist/app.min.mjs.syamkey dist/app.restored.mjs
 ```
 
 ## Supported extensions

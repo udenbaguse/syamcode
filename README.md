@@ -8,7 +8,7 @@ CLI for **minify + reversible identifier obfuscation** that can be restored usin
 
 This software is proprietary. By using SyamCode, you agree to the [End-User License Agreement (EULA)](LICENSE).
 
-For selected code extensions (especially JS/TS), `syamcode`:
+For selected code extensions (especially JS/MJS), `syamcode`:
 
 1. produces a minified version
 2. replaces identifier names with hash SHA-256

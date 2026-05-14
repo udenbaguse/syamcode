@@ -6,7 +6,7 @@
   "version": "2.0.0",
   "description": "CLI to minify code and perform reversible identifier obfuscation + restore (Babel AST).",
   "bin": {
-    "@udenbaguse/syamcode": "bin/syamcode-syamkey-v2.js"
+    "syamcode": "bin/syamcode-syamkey-v2.js"
   },
   "type": "commonjs",
   "license": "PROPRIETARY",

@@ -38,10 +38,10 @@ npx @udenbaguse/syamcode restore <minifiedPath> <syamkeyPath> <outputPath>
 
 ```bash
 npx @udenbaguse/syamcode src/app.js dist/app.min.js
-npx @udenbaguse/syamcode dist/app.min.js dist/app.min.js.syamkey dist/app.restored.js
+npx @udenbaguse/syamcode restore dist/app.min.js dist/app.min.js.syamkey dist/app.restored.js
 
 npx @udenbaguse/syamcode src/app.mjs dist/app.min.mjs
-npx @udenbaguse/syamcode dist/app.min.mjs dist/app.min.mjs.syamkey dist/app.restored.mjs
+npx @udenbaguse/syamcode restore dist/app.min.mjs dist/app.min.mjs.syamkey dist/app.restored.mjs
 ```
 
 ## Supported extensions

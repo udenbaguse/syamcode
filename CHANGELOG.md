@@ -1,6 +1,11 @@
 # Changelog
 
 ## Version 2.0.1 (2026-05-14)
+### Updated
+- Updated README and LICENSE with correct package name and site URL.
+- Updated EULA with new attribution requirements and usage terms.
+
+## Version 2.0.1 (2026-05-14)
 ### Fixed
 - fixed restore command to correctly handle
 

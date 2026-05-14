@@ -26,7 +26,7 @@ npx @udenbaguse/syamcode <inputPath> <outputPath>
 Outputs:
 
 - `<outputPath>`: minified code
-- `<outputPath>.syamkey`: mapping for JS/TS/JSX/TSX
+- `<outputPath>.syamkey`: mapping for JS/MJS
 
 ### Restore
 
@@ -49,9 +49,9 @@ npx @udenbaguse/syamcode restore dist/app.min.mjs dist/app.min.mjs.syamkey dist/
 - `.js` and `.mjs`:
   - parse using **Babel AST**
   - remove comments + compress whitespace
-  - generate `.syamkey` mapping: `originalIdentifier -> idN`
+  - generate `.syamkey` mapping: `originalIdentifier -> hash SHA-256`
 
 ## Important notes
 
 - Restore returns the **identifier names** (after reversing the rename), not the original whitespace/comments.
-- For JS/TS/JSX/TSX, restoration correctness is improved by using **scope-aware** Babel AST transformations.
+- For JS/MJS, restoration correctness is improved by using **scope-aware** Babel AST transformations.

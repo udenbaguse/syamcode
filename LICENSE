@@ -1,11 +1,11 @@
 # END-USER LICENSE AGREEMENT (EULA)
 
 ## FOR "SYAMCODE" SOFTWARE
-Version 2.0.0 - Date May 14, 2026
+Version 2.0.2 - Date May 14, 2026
 
 Created by: Muhamad Syamsudin (@udenbaguse)
 Contact: udenbagusee@gmail.com
-Official Site: https://www.npmjs.com/package/syamcode
+Official Site: https://www.npmjs.com/package/@udenbaguse/syamcode
 
 ---
 
@@ -16,7 +16,7 @@ b. This license applies to all users who install or use the Software, without li
 ### 2. MANDATORY USAGE REQUIREMENTS
 You MUST comply with the following requirements when using the SyamCode Software:
 a. *ATTRIBUTION REQUIRED* – On all projects, applications, or products that use SyamCode Software, you must provide attribution to the creator in the following format:
-   > "This software uses SyamCode by Muhamad Syamsudin (@udenbaguse) – https://www.npmjs.com/package/syamcode"
+   > "This software uses SyamCode by Muhamad Syamsudin (@udenbaguse) – https://www.npmjs.com/package/@udenbaguse/syamcode"
    - Attribution must be displayed in the project documentation, application "About" page, or in the README.md file if the project is uploaded to GitHub.
 b. *NO MODIFICATIONS* – You are NOT permitted to modify, decompile, or add new features to the Software without written consent from us.
 c. *NO REDISTRIBUTION* – You are NOT permitted to sell, redistribute, or rent the Software to third parties. You may only provide a link to the official SyamCode page on npm or our site.

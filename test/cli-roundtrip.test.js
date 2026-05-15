@@ -84,7 +84,7 @@ console.log(bump(secretValue));
   const esm = runRoundtrip(
     "esm",
     {
-      "entry.mjs": `
+      "entry.mjs": `#!/usr/bin/env node
 import label from "./label.js";
 import { double } from "./math.js";
 

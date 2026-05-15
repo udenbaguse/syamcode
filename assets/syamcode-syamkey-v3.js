@@ -425,6 +425,7 @@ function makeExportAllReplacementStatements(exportNode, moduleInfo, moduleByPath
 }
 function transformModuleForBundle(moduleInfo, moduleByPath, externalImports) {
   const ast = parseCode(moduleInfo.code, detectExt(moduleInfo.filePath));
+  ast.program.interpreter = null;
   replaceLocalRequireCalls(ast, moduleInfo.filePath, moduleByPath);
   const body = [];
   for (const node of ast.program.body) {

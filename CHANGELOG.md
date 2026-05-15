@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 3.0.2 (2026-05-16)
+### Fixed
+- Fix bundling for CLI entry files that start with a shebang (`#!/usr/bin/env node`) by removing the shebang from module wrapper output.
+
 ## Version 3.0.1 (2026-05-16)
 ### Added
 - Add local dependency bundling for JavaScript files that use `require` (CommonJS) or `import` (ES Module).

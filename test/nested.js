@@ -1,3 +1,5 @@
+let name = "Syam";
+
 function outerFunction(message) {
   // nested function
   function innerFunction(prefix) {

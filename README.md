@@ -8,50 +8,54 @@ CLI for **minify + reversible identifier obfuscation** that can be restored usin
 
 This software is proprietary. By using SyamCode, you agree to the [End-User License Agreement (EULA)](LICENSE).
 
-For selected code extensions (especially JS/MJS), `syamcode`:
+For selected code extensions (JS/MJS/CJS), `syamcode`:
 
 1. produces a minified version
-2. replaces identifier names with hash SHA-256
-3. writes a key file: `<outputPath>.syamkey` (JSON mapping)
-4. can restore identifiers back to the original names using `syamcode restore`
+2. detects local `import` / `require` dependencies
+3. bundles local files into one output file
+4. replaces identifier names with hash SHA-256
+5. writes a key file: `<outputPath>.syamkey` (JSON mapping)
+6. can restore identifiers back to the original names using `syamcode restore`
 
 ## Usage
 
 ### Minify (generates `.syamkey`)
 
 ```bash
-npx syamcode <inputPath> <outputPath>
+npx @udenbaguse/syamcode@latest <inputPath> <outputPath>
 ```
 
 Outputs:
 
 - `<outputPath>`: minified code
-- `<outputPath>.syamkey`: mapping for JS/MJS
+- `<outputPath>.syamkey`: mapping for JS/MJS/CJS
 
 ### Restore
 
 ```bash
-npx syamcode restore <minifiedPath> <syamkeyPath> <outputPath>
+npx @udenbaguse/syamcode@latest restore <minifiedPath> <syamkeyPath> <outputPath>
 ```
 
 ## Examples
 
 ```bash
-npx syamcode src/app.js dist/app.min.js
-npx syamcode restore dist/app.min.js dist/app.min.js.syamkey dist/app.restored.js
+npx @udenbaguse/syamcode@latest src/app.js dist/app.min.js
+npx @udenbaguse/syamcode@latest restore dist/app.min.js dist/app.min.js.syamkey dist/app.restored.js
 
-npx syamcode src/app.mjs dist/app.min.mjs
-npx syamcode restore dist/app.min.mjs dist/app.min.mjs.syamkey dist/app.restored.mjs
+npx @udenbaguse/syamcode@latest src/app.mjs dist/app.min.mjs
+npx @udenbaguse/syamcode@latest restore dist/app.min.mjs dist/app.min.mjs.syamkey dist/app.restored.mjs
 ```
 
 ## Supported extensions
 
-- `.js` and `.mjs`:
+- `.js`, `.mjs`, and `.cjs`:
   - parse using **Babel AST**
+  - bundle local relative dependencies from `import` / `require`
   - remove comments + compress whitespace
   - generate `.syamkey` mapping: `originalIdentifier -> hash SHA-256`
 
 ## Important notes
 
 - Restore returns the **identifier names** (after reversing the rename), not the original whitespace/comments.
-- For JS/MJS, restoration correctness is improved by using **scope-aware** Babel AST transformations.
+- Bundling only resolves local relative dependencies such as `./helper.js` or `../lib/index.js`. Package imports and Node built-ins such as `fs` remain external dependencies.
+- For JS/MJS/CJS, restoration correctness is improved by using **scope-aware** Babel AST transformations.

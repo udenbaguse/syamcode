@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 3.0.1 (2026-05-15)
+## Version 3.0.1 (2026-05-16)
 ### Added
 - Add local dependency bundling for JavaScript files that use `require` (CommonJS) or `import` (ES Module).
 - Add support for `.cjs` files alongside `.js` and `.mjs`.

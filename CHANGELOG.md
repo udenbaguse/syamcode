@@ -1,5 +1,18 @@
 # Changelog
 
+## Version 3.0.0 (2026-05-15)
+### Changed
+- Change command from `npx @udenbaguse/syamcode` to `npx syamcode` for better user experience and consistency with package name.
+
+## Version 2.0.6 (2026-05-15)
+### Fixed
+- Fix bug bin/syamcode-syamkey-v3.js
+
+## Version 2.0.5 (2026-05-15)
+### Fixed
+- Fix bug error message "'syamcode' is not recognized as an internal or external command,
+operable program or batch file.""
+
 ## Version 2.0.4 (2026-05-15)
 ### Added
 - Syamkey-3, hash now uses full 64-digit SHA-256 hex for stronger obfuscation

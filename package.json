@@ -1,11 +1,11 @@
 {
-  "name": "namalain",
+  "name": "@udenbaguse/syamcode",
   "version": "2.0.4",
   "description": "CLI to minify code and perform reversible identifier obfuscation + restore (Babel AST).",
   "bin": {
-    "namalain": "bin/syamcode-syamkey-v3.js"
+    "syamcode": "bin/syamcode-syamkey-v3.js"
   },
-  "type": "commonjs",
+  "type": "module",
   "license": "PROPRIETARY",
   "author": "Muhamad Syamsudin (@udenbaguse)",
   "dependencies": {

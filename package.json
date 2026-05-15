@@ -6,6 +6,7 @@
     "syamcode": "./bin/syamcode-syamkey-v3.js"
   },
   "scripts": {
+    "syamcode": "syamcode",
     "test": "node test/cli-roundtrip.test.js"
   },
   "type": "module",

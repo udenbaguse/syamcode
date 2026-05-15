@@ -19,6 +19,7 @@ You MUST comply with the following requirements when using the SyamCode Software
 - *ATTRIBUTION REQUIRED* – On all projects, applications, or products that use SyamCode Software, you must provide attribution to the creator in the following format:
    > "This software uses SyamCode by Muhamad Syamsudin (@udenbaguse) – https://www.npmjs.com/package/@udenbaguse/syamcode"
    - Attribution must be displayed in the project documentation, application "About" page, or in the README.md file if the project is uploaded to GitHub.
+   - **EXCEPTION:** if you only use Syamcode via `npx` for one-time/occasional task(without installing it into your project), no attribution is required.
 - *NO MODIFICATIONS* – You are NOT permitted to modify, decompile, or add new features to the Software without written consent from us.
 - *NO REDISTRIBUTION* – You are NOT permitted to sell, redistribute, or rent the Software to third parties. You may only provide a link to the official SyamCode page on npm or our site.
 

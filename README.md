@@ -1,4 +1,4 @@
-# syamcode
+# SY⭐MC0D3 (Syamcode Syamkey-V3)
 
 CLI for **minify + reversible identifier obfuscation** that can be restored using a key file named `.syamkey`.
 
@@ -23,6 +23,10 @@ Minify process using SyamCode by Muhamad Syamsudin (@udenbaguse) – https://www
 This application uses SyamCode by Muhamad Syamsudin (@udenbaguse) – https://www.npmjs.com/package/@udenbaguse/syamcode' 
 ```
 in your Project's Documentation or README.
+
+### If You Only Use `npx...`
+for one-time task -> ***No Attribution*** Needed!
+Feel free to use it for quick minify/restore jobs.
 
 ## Features
 For selected code extensions (JS/MJS/CJS), `syamcode`:
@@ -76,3 +80,6 @@ npx @udenbaguse/syamcode@latest restore dist/app.min.mjs dist/app.min.mjs.syamke
 - Restore returns the **identifier names** (after reversing the rename), not the original whitespace/comments.
 - Bundling only resolves local relative dependencies such as `./helper.js` or `../lib/index.js`. Package imports and Node built-ins such as `fs` remain external dependencies.
 - For JS/MJS/CJS, restoration correctness is improved by using **scope-aware** Babel AST transformations.
+- If installing then it will use npm run, the command will change from npx to npm like: 
+  - **npx @udenbaguse/syamcode@latest** [inputPath] [outputPath] *becomes* **npm run syamcode** [inputPath] [outputPath]
+  - **npx @udenbaguse/syamcode@latest restore** [minifiedPath] [syamkeyPath] [outputPath] *becomes* **npm run syamcode -- restore** [minifiedPath] [syamkeyPath] [outputPath]

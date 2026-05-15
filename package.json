@@ -9,7 +9,7 @@
     "test": "node test/cli-roundtrip.test.js"
   },
   "type": "module",
-  "license": "PROPRIETARY",
+  "license": "SEE LICENSE IN LICENSE",
   "author": "Muhamad Syamsudin (@udenbaguse)",
   "dependencies": {
     "@babel/generator": "^7.26.0",

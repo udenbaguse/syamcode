@@ -4,10 +4,27 @@ CLI for **minify + reversible identifier obfuscation** that can be restored usin
 
 [![License](https://img.shields.io/badge/license-proprietary-blue.svg)](LICENSE)
 
-## License
+
+## License 
 
 This software is proprietary. By using SyamCode, you agree to the [End-User License Agreement (EULA)](LICENSE).
 
+### - SyamCode as DevDependencies 
+for your project's minify/build process, please credit it in the format:
+
+```
+Minify process using SyamCode by Muhamad Syamsudin (@udenbaguse) – https://www.npmjs.com/package/@udenbaguse/syamcode
+```
+
+
+### - SyamCode is Used as Part of Dependencies(not devDependencies)
+ it means that the Software is an essential part of your application's functionality. You MUST include credit in the format:
+```
+This application uses SyamCode by Muhamad Syamsudin (@udenbaguse) – https://www.npmjs.com/package/@udenbaguse/syamcode' 
+```
+in your Project's Documentation or README.
+
+## Features
 For selected code extensions (JS/MJS/CJS), `syamcode`:
 
 1. produces a minified version

@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
-const cliPath = path.join(projectRoot, "bin", "syamcode-syamkey-v3.js");
+const cliPath = path.join(projectRoot, "bin", "syamcode.js");
 const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "syamcode-cli-test-"));
 
 function runCli(args, cwd = projectRoot) {
@@ -148,6 +148,169 @@ exports.double = function double(value) {
     "result 42",
   );
   assert.match(commonjs.restoredCode, /\bdouble\b/);
+
+  const esmLiveBinding = runRoundtrip(
+    "esm-live-binding",
+    {
+      "entry.mjs": `
+import { count, inc } from "./counter.mjs";
+
+console.log(count);
+inc();
+console.log(count);
+`,
+      "counter.mjs": `
+export let count = 0;
+export function inc() {
+  count += 1;
+}
+`,
+    },
+    "entry.mjs",
+    "bundle.mjs",
+  );
+
+  assert.equal(
+    execFileSync("node", [esmLiveBinding.minifiedPath], {
+      cwd: esmLiveBinding.caseDir,
+      encoding: "utf8",
+    }).trim(),
+    "0\n1",
+  );
+
+  const cjsDefaultImport = runRoundtrip(
+    "cjs-default-import",
+    {
+      "entry.mjs": `
+import label from "./label.cjs";
+
+console.log(label);
+`,
+      "label.cjs": `module.exports = "result";`,
+    },
+    "entry.mjs",
+    "bundle.mjs",
+  );
+
+  assert.equal(
+    execFileSync("node", [cjsDefaultImport.minifiedPath], {
+      cwd: cjsDefaultImport.caseDir,
+      encoding: "utf8",
+    }).trim(),
+    "result",
+  );
+
+  const exportStar = runRoundtrip(
+    "export-star",
+    {
+      "entry.mjs": `
+import * as values from "./barrel.mjs";
+
+console.log(Object.prototype.hasOwnProperty.call(values, "default"), values.named);
+`,
+      "barrel.mjs": `export * from "./child.mjs";`,
+      "child.mjs": `
+export default "default-value";
+export const named = "n";
+`,
+    },
+    "entry.mjs",
+    "bundle.mjs",
+  );
+
+  assert.equal(
+    execFileSync("node", [exportStar.minifiedPath], {
+      cwd: exportStar.caseDir,
+      encoding: "utf8",
+    }).trim(),
+    "false n",
+  );
+
+  const esmEntryExport = runRoundtrip(
+    "esm-entry-export",
+    {
+      "entry.mjs": `
+import { double } from "./math.mjs";
+
+export const answer = double(21);
+`,
+      "math.mjs": `export const double = value => value * 2;`,
+    },
+    "entry.mjs",
+    "bundle.mjs",
+  );
+  fs.writeFileSync(
+    path.join(esmEntryExport.caseDir, "check.mjs"),
+    `import { answer } from "./bundle.mjs";\nconsole.log(answer);\n`,
+    "utf8",
+  );
+  assert.equal(
+    execFileSync("node", [path.join(esmEntryExport.caseDir, "check.mjs")], {
+      cwd: esmEntryExport.caseDir,
+      encoding: "utf8",
+    }).trim(),
+    "42",
+  );
+
+  const commonjsEntryExport = runRoundtrip(
+    "commonjs-entry-export",
+    {
+      "entry.cjs": `
+const { double } = require("./math.cjs");
+
+module.exports = { answer: double(21) };
+`,
+      "math.cjs": `exports.double = value => value * 2;`,
+    },
+    "entry.cjs",
+    "bundle.cjs",
+  );
+  assert.equal(
+    execFileSync("node", [
+      "-e",
+      "const mod=require(process.argv[1]); console.log(JSON.stringify(mod));",
+      commonjsEntryExport.minifiedPath,
+    ], {
+      cwd: commonjsEntryExport.caseDir,
+      encoding: "utf8",
+    }).trim(),
+    '{"answer":42}',
+  );
+
+  const externalImportCollision = runRoundtrip(
+    "external-import-collision",
+    {
+      "entry.mjs": `
+import { a } from "./a.mjs";
+import { b } from "./b.mjs";
+
+console.log(a(), b());
+`,
+      "a.mjs": `
+import fs from "node:fs";
+
+export function a() {
+  return typeof fs.readFileSync;
+}
+`,
+      "b.mjs": `
+import fs from "node:path";
+
+export function b() {
+  return typeof fs.join;
+}
+`,
+    },
+    "entry.mjs",
+    "bundle.mjs",
+  );
+  assert.equal(
+    execFileSync("node", [externalImportCollision.minifiedPath], {
+      cwd: externalImportCollision.caseDir,
+      encoding: "utf8",
+    }).trim(),
+    "function function",
+  );
 
   console.log("CLI roundtrip and bundle tests passed.");
 } finally {

@@ -4,3 +4,4 @@ test-output/
 TODO.md
 bin\syamcode.js
 assets/
+.gitignore

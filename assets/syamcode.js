@@ -176,6 +176,29 @@ function propAccess(objectName, propertyName) {
 function makeExportAssignment(exportedName, expressionCode) {
   return `${propAccess("exports", exportedName)}=${expressionCode};`;
 }
+function makeExportGetter(exportedName, expressionCode) {
+  return `Object.defineProperty(exports,${JSON.stringify(exportedName)},{enumerable:true,get(){return ${expressionCode};}});`;
+}
+function makeExportStarCopy(tempName) {
+  return `for(const key of Object.keys(${tempName})){if(key!=="default"&&!Object.prototype.hasOwnProperty.call(exports,key)){Object.defineProperty(exports,key,{enumerable:true,get(){return ${tempName}[key];}});}}`;
+}
+function sanitizeIdentifierPart(value) {
+  const safe = String(value).replace(/[^$\w]/g, "_");
+  return safe || "value";
+}
+function importExportName(name) {
+  return isIdentifierName(name) ? name : JSON.stringify(name);
+}
+function replaceBindingReferences(binding, expressionCode) {
+  if (!binding) return;
+  for (const referencePath of [...binding.referencePaths]) {
+    if (!referencePath || referencePath.removed) continue;
+    if (referencePath.parent && referencePath.parent.type === "ExportSpecifier") {
+      continue;
+    }
+    referencePath.replaceWith(parseBundleExpression(expressionCode));
+  }
+}
 function collectPatternNames(pattern, names = []) {
   if (!pattern) return names;
   switch (pattern.type) {
@@ -309,42 +332,115 @@ function replaceLocalRequireCalls(ast, filePath, moduleByPath) {
     },
   });
 }
-function makeImportReplacementStatements(importNode, moduleInfo, moduleByPath) {
-  const specifier = importNode.source.value;
-  const resolvedPath = resolveDependencyPath(moduleInfo.filePath, specifier);
-  if (!resolvedPath) return null;
-  const dependency = moduleByPath.get(resolvedPath);
-  const tempName = `__syamcode_import_${moduleInfo.id}_${dependency.id}`;
-  const statements = [`const ${tempName}=__syamcode_require(${dependency.id});`];
-  if (!importNode.specifiers.length) {
-    return parseBundleStatements(`__syamcode_require(${dependency.id});`);
-  }
-  for (const importSpecifier of importNode.specifiers) {
-    if (importSpecifier.type === "ImportDefaultSpecifier") {
-      statements.push(`const ${importSpecifier.local.name}=${tempName}.default;`);
-      continue;
-    }
-    if (importSpecifier.type === "ImportNamespaceSpecifier") {
-      statements.push(`const ${importSpecifier.local.name}=${tempName};`);
-      continue;
-    }
-    if (importSpecifier.type === "ImportSpecifier") {
-      const importedName = getNodeName(importSpecifier.imported);
-      statements.push(
-        `const ${importSpecifier.local.name}=${propAccess(tempName, importedName)};`,
-      );
-    }
-  }
-  return parseBundleStatements(statements.join(""));
+function prepareImportReplacements(ast, moduleInfo, moduleByPath, externalImports) {
+  const replacements = new WeakMap();
+  const importExpressions = new Map();
+  let externalIndex = 0;
+  traverse(ast, {
+    ImportDeclaration(importPath) {
+      const importNode = importPath.node;
+      const source = importNode.source.value;
+      if (importNode.importKind === "type") {
+        replacements.set(importNode, []);
+        return;
+      }
+
+      const resolvedPath = resolveDependencyPath(moduleInfo.filePath, source);
+      if (resolvedPath) {
+        const dependency = moduleByPath.get(resolvedPath);
+        if (!dependency) {
+          fail(`Dependency was not collected: ${resolvedPath}`);
+        }
+        if (!importNode.specifiers.length) {
+          replacements.set(
+            importNode,
+            parseBundleStatements(`__syamcode_require(${dependency.id});`),
+          );
+          return;
+        }
+
+        const tempName = `__syamcode_import_${moduleInfo.id}_${dependency.id}`;
+        for (const importSpecifier of importNode.specifiers) {
+          if (importSpecifier.importKind === "type") continue;
+          const binding = importPath.scope.getBinding(importSpecifier.local.name);
+          if (importSpecifier.type === "ImportDefaultSpecifier") {
+            const expressionCode =
+              dependency.moduleKind === "commonjs"
+                ? tempName
+                : propAccess(tempName, "default");
+            importExpressions.set(importSpecifier.local.name, expressionCode);
+            replaceBindingReferences(binding, expressionCode);
+            continue;
+          }
+          if (importSpecifier.type === "ImportNamespaceSpecifier") {
+            importExpressions.set(importSpecifier.local.name, tempName);
+            replaceBindingReferences(binding, tempName);
+            continue;
+          }
+          if (importSpecifier.type === "ImportSpecifier") {
+            const importedName = getNodeName(importSpecifier.imported);
+            const expressionCode = propAccess(tempName, importedName);
+            importExpressions.set(importSpecifier.local.name, expressionCode);
+            replaceBindingReferences(binding, expressionCode);
+          }
+        }
+        replacements.set(
+          importNode,
+          parseBundleStatements(`const ${tempName}=__syamcode_require(${dependency.id});`),
+        );
+        return;
+      }
+
+      if (!importNode.specifiers.length) {
+        externalImports.add(`import ${JSON.stringify(source)};`);
+        replacements.set(importNode, []);
+        return;
+      }
+
+      for (const importSpecifier of importNode.specifiers) {
+        if (importSpecifier.importKind === "type") continue;
+        const localName = importSpecifier.local.name;
+        const externalName = `__syamcode_external_${moduleInfo.id}_${externalIndex++}_${sanitizeIdentifierPart(localName)}`;
+        const binding = importPath.scope.getBinding(localName);
+        if (importSpecifier.type === "ImportDefaultSpecifier") {
+          externalImports.add(`import ${externalName} from ${JSON.stringify(source)};`);
+          importExpressions.set(localName, externalName);
+          replaceBindingReferences(binding, externalName);
+          continue;
+        }
+        if (importSpecifier.type === "ImportNamespaceSpecifier") {
+          externalImports.add(`import * as ${externalName} from ${JSON.stringify(source)};`);
+          importExpressions.set(localName, externalName);
+          replaceBindingReferences(binding, externalName);
+          continue;
+        }
+        if (importSpecifier.type === "ImportSpecifier") {
+          const importedName = getNodeName(importSpecifier.imported);
+          externalImports.add(
+            `import {${importExportName(importedName)} as ${externalName}} from ${JSON.stringify(source)};`,
+          );
+          importExpressions.set(localName, externalName);
+          replaceBindingReferences(binding, externalName);
+        }
+      }
+      replacements.set(importNode, []);
+    },
+  });
+  return { replacements, importExpressions };
 }
-function makeExportNamedReplacementStatements(exportNode, moduleInfo, moduleByPath) {
+function makeExportNamedReplacementStatements(
+  exportNode,
+  moduleInfo,
+  moduleByPath,
+  importExpressions = new Map(),
+) {
   const statements = [];
   if (exportNode.declaration) {
     statements.push(exportNode.declaration);
     if (exportNode.declaration.type === "VariableDeclaration") {
       for (const declaration of exportNode.declaration.declarations || []) {
         for (const name of collectPatternNames(declaration.id)) {
-          statements.push(...parseBundleStatements(makeExportAssignment(name, name)));
+          statements.push(...parseBundleStatements(makeExportGetter(name, name)));
         }
       }
       return statements;
@@ -352,7 +448,7 @@ function makeExportNamedReplacementStatements(exportNode, moduleInfo, moduleByPa
     const declarationName = getNodeName(exportNode.declaration.id);
     if (declarationName) {
       statements.push(
-        ...parseBundleStatements(makeExportAssignment(declarationName, declarationName)),
+        ...parseBundleStatements(makeExportGetter(declarationName, declarationName)),
       );
     }
     return statements;
@@ -371,7 +467,7 @@ function makeExportNamedReplacementStatements(exportNode, moduleInfo, moduleByPa
       if (exportSpecifier.type === "ExportNamespaceSpecifier") {
         const exportedName = getNodeName(exportSpecifier.exported);
         statements.push(
-          ...parseBundleStatements(makeExportAssignment(exportedName, tempName)),
+          ...parseBundleStatements(makeExportGetter(exportedName, tempName)),
         );
         continue;
       }
@@ -379,7 +475,7 @@ function makeExportNamedReplacementStatements(exportNode, moduleInfo, moduleByPa
       const exportedName = getNodeName(exportSpecifier.exported);
       statements.push(
         ...parseBundleStatements(
-          makeExportAssignment(exportedName, propAccess(tempName, localName)),
+          makeExportGetter(exportedName, propAccess(tempName, localName)),
         ),
       );
     }
@@ -388,8 +484,9 @@ function makeExportNamedReplacementStatements(exportNode, moduleInfo, moduleByPa
   for (const exportSpecifier of exportNode.specifiers || []) {
     const localName = getNodeName(exportSpecifier.local);
     const exportedName = getNodeName(exportSpecifier.exported);
+    const expressionCode = importExpressions.get(localName) || localName;
     statements.push(
-      ...parseBundleStatements(makeExportAssignment(exportedName, localName)),
+      ...parseBundleStatements(makeExportGetter(exportedName, expressionCode)),
     );
   }
   return statements;
@@ -421,31 +518,88 @@ function makeExportAllReplacementStatements(exportNode, moduleInfo, moduleByPath
     fail(`External export-all is not supported: ${exportNode.source.value}`);
   }
   const dependency = moduleByPath.get(resolvedPath);
-  return parseBundleStatements(`Object.assign(exports,__syamcode_require(${dependency.id}));`);
+  const tempName = `__syamcode_export_all_${moduleInfo.id}_${dependency.id}`;
+  return parseBundleStatements(
+    `const ${tempName}=__syamcode_require(${dependency.id});${makeExportStarCopy(tempName)}`,
+  );
+}
+function addExportName(names, name) {
+  if (name && !names.includes(name)) names.push(name);
+}
+function collectExportNames(moduleInfo, moduleByPath, seen = new Set()) {
+  if (!moduleInfo || seen.has(moduleInfo.filePath)) return [];
+  seen.add(moduleInfo.filePath);
+  const names = [];
+  for (const node of moduleInfo.ast.program.body) {
+    if (node.type === "ExportDefaultDeclaration") {
+      addExportName(names, "default");
+      continue;
+    }
+    if (node.type === "ExportNamedDeclaration") {
+      if (node.declaration) {
+        if (node.declaration.type === "VariableDeclaration") {
+          for (const declaration of node.declaration.declarations || []) {
+            for (const name of collectPatternNames(declaration.id)) {
+              addExportName(names, name);
+            }
+          }
+          continue;
+        }
+        addExportName(names, getNodeName(node.declaration.id));
+        continue;
+      }
+      for (const exportSpecifier of node.specifiers || []) {
+        addExportName(names, getNodeName(exportSpecifier.exported));
+      }
+      continue;
+    }
+    if (node.type === "ExportAllDeclaration") {
+      const resolvedPath = resolveDependencyPath(moduleInfo.filePath, node.source.value);
+      const dependency = moduleByPath.get(resolvedPath);
+      for (const name of collectExportNames(dependency, moduleByPath, seen)) {
+        if (name !== "default") addExportName(names, name);
+      }
+    }
+  }
+  return names;
+}
+function makeEsmEntryExportFooter(entryModule, moduleByPath) {
+  const exportNames = collectExportNames(entryModule, moduleByPath);
+  if (!exportNames.length) return "__syamcode_require(0);";
+  const lines = ["const __syamcode_entry_exports=__syamcode_require(0);"];
+  const specifiers = [];
+  let index = 0;
+  for (const exportName of exportNames) {
+    const localName = `__syamcode_entry_export_${index++}`;
+    lines.push(
+      `const ${localName}=${propAccess("__syamcode_entry_exports", exportName)};`,
+    );
+    specifiers.push(`${localName} as ${importExportName(exportName)}`);
+  }
+  lines.push(`export{${specifiers.join(",")}};`);
+  return lines.join("");
 }
 function transformModuleForBundle(moduleInfo, moduleByPath, externalImports) {
   const ast = parseCode(moduleInfo.code, detectExt(moduleInfo.filePath));
   ast.program.interpreter = null;
   replaceLocalRequireCalls(ast, moduleInfo.filePath, moduleByPath);
+  const { replacements: importReplacements, importExpressions } =
+    prepareImportReplacements(ast, moduleInfo, moduleByPath, externalImports);
   const body = [];
   for (const node of ast.program.body) {
     if (node.type === "ImportDeclaration") {
-      const importReplacement = makeImportReplacementStatements(
-        node,
-        moduleInfo,
-        moduleByPath,
-      );
-      if (importReplacement) {
-        body.push(...importReplacement);
-      } else {
-        externalImports.add(
-          generate(node, { jsescOption: { minimal: true }, comments: false }).code,
-        );
-      }
+      body.push(...(importReplacements.get(node) || []));
       continue;
     }
     if (node.type === "ExportNamedDeclaration") {
-      body.push(...makeExportNamedReplacementStatements(node, moduleInfo, moduleByPath));
+      body.push(
+        ...makeExportNamedReplacementStatements(
+          node,
+          moduleInfo,
+          moduleByPath,
+          importExpressions,
+        ),
+      );
       continue;
     }
     if (node.type === "ExportDefaultDeclaration") {
@@ -477,6 +631,14 @@ function createBundle(inputPath) {
     return `${moduleInfo.id}(module,exports,__syamcode_require){${moduleCode}}`;
   });
   const externalImportCode = Array.from(externalImports).join("\n");
+  const entryModule = graph.modules[0];
+  const entryExportNames = collectExportNames(entryModule, graph.moduleByPath);
+  let entryFooter = "__syamcode_require(0);";
+  if (entryExportNames.length > 0) {
+    entryFooter = makeEsmEntryExportFooter(entryModule, graph.moduleByPath);
+  } else if (entryModule.moduleKind === "commonjs" && externalImports.size === 0) {
+    entryFooter = "module.exports=__syamcode_require(0);";
+  }
   const bundleCode = `${externalImportCode}
 const __syamcode_modules={${moduleEntries.join(",")}};
 const __syamcode_cache={};
@@ -487,7 +649,7 @@ function __syamcode_require(id){
   __syamcode_modules[id](module,module.exports,__syamcode_require);
   return module.exports;
 }
-__syamcode_require(0);`;
+${entryFooter}`;
   return {
     code: bundleCode,
     modules: graph.modules,

@@ -1,5 +1,18 @@
 # Changelog
 
+## Version 3.0.4 (2026-05-26)
+### Fixed
+- Improve local dependency bundling compatibility for CommonJS and ES Module outputs.
+- Preserve entry module exports in generated bundles.
+- Preserve ES Module live bindings for bundled imports and exports.
+- Correct default imports from local CommonJS modules.
+- Prevent `export *` from re-exporting `default`.
+- Avoid external import name collisions in bundled output.
+- Update test and package lock references to the new `bin/syamcode.js` executable.
+
+### Added
+- Add regression tests for bundling edge cases across CommonJS, ES Modules, re-exports, and external imports.
+
 ## Version 3.0.3 (2026-05-17)
 ### Added
 - Changelog in README.md for better visibility of updates and changes.
